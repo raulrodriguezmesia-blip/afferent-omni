@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Afferent-Omni • Somatosensorial AI Command Hub</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f3ff', 500: '#6366f1', 600: '#4f46e5', 900: '#0f172a' },
+            neon: { purple: '#a855f7', cyan: '#06b6d4', magenta: '#ec4899', green: '#10b981' }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'glow-pulse': 'glow 2s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            glow: {
+              '0%': { boxShadow: '0 0 10px rgba(168, 85, 247, 0.3)' },
+              '100%': { boxShadow: '0 0 25px rgba(168, 85, 247, 0.8)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.6); }
+    .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(168, 85, 247, 0.2); }
+    .glass-card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+  <header class="h-16 border-b border-purple-500/20 bg-slate-900/90 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center gap-4">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30 border border-purple-400/40">
+        <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-slate-200 to-purple-300 bg-clip-text text-transparent">AFFEREENT-OMNI</h1>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-medium">v2.4 C2-HUB</span>
+        </div>
+        <p class="text-xs text-slate-400 hidden sm:block">A Causal Vision-to-Touch Prior • Spatial Somatosensorial Architecture</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4 text-xs font-mono">
+      <div class="hidden md:flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+        <span class="text-slate-400">Target Object:</span>
+        <select id="object-selector" onchange="switchObject(this.value)" class="bg-slate-800 text-purple-300 border border-purple-500/30 rounded px-2 py-0.5 focus:outline-none focus:border-purple-400 cursor-pointer">
+          <option value="rock">Igneous Rock (Geological Sample)</option>
+          <option value="glass">Tempered Glass (EV Assembly)</option>
+          <option value="tissue">Biological Tissue (Medical)</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>WS: 50Hz STREAMING</span>
+      </div>
+      <button id="inference-btn" onclick="triggerInference()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-lg shadow-purple-600/30 transition-all border border-purple-400/30 flex items-center gap-2 cursor-pointer active:scale-95">
+        <i class="fa-solid fa-play text-xs"></i><span>Run Inference</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1800px] w-full mx-auto">
+    <section class="lg:col-span-4 flex flex-col gap-6">
+      <div class="glass-panel rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <h2 class="text-xs font-bold font-mono tracking-wider text-purple-300 uppercase flex items-center gap-2"><i class="fa-solid fa-sliders text-cyan-400"></i>Sim2Real Closed-Loop Control</h2>
+          <span class="text-[10px] text-slate-400 font-mono">REAL-TIME GATING</span>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-300 font-medium">WebSocket 50 Hz Live Loop</span>
+            <button id="stream-toggle-btn" onclick="toggleStream()" class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md shadow-purple-600/30 cursor-pointer">ACTIVE STREAM</button>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1"><span class="text-slate-400">Uncertainty Threshold (U_th)</span><span id="uth-val" class="text-cyan-400 font-bold">25%</span></div>
+            <input type="range" min="5" max="90" value="25" oninput="updateUth(this.value)" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1"><span class="text-slate-400">Max Force Cap (F_max)</span><span id="fmax-val" class="text-purple-400 font-bold">1.80 N</span></div>
+            <input type="range" min="0.5" max="5.0" step="0.1" value="1.8" oninput="updateFmax(this.value)" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400">
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 shadow-xl border-l-4 border-l-pink-500">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <h2 class="text-xs font-bold font-mono tracking-wider text-pink-400 uppercase flex items-center gap-2"><i class="fa-solid fa-bolt text-pink-500"></i>Neuromorphic Reflex HUD • Edge</h2>
+          <span class="text-[10px] text-slate-400 font-mono">&lt; 15ms INTERCEPT</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="glass-card p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-mono block">EDGE LATENCY</span>
+            <div class="flex items-baseline gap-1 mt-1"><span id="edge-latency" class="text-xl font-bold font-mono text-emerald-400">8.8</span><span class="text-xs text-slate-400 font-mono">ms</span></div>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-mono block">SLIP INTERCEPT</span>
+            <div id="slip-status-badge" class="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/40"><i class="fa-solid fa-shield-halved text-[10px]"></i><span>SAFE</span></div>
+          </div>
+        </div>
+        <div class="bg-slate-950/80 rounded-xl p-3 border border-slate-800 font-mono text-[11px] space-y-1">
+          <span class="text-slate-500 text-[10px] block mb-1">REFLEX EVENT LOG TICKER</span>
+          <div id="reflex-log" class="text-purple-300 space-y-0.5 max-h-20 overflow-y-auto pr-1">
+            <p>[00:01.24] Edge arc active @ 8.8ms latency.</p>
+            <p>[00:01.89] Zero slip micro-lock override engaged.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+          <h2 class="text-xs font-bold font-mono tracking-wider text-indigo-300 uppercase flex items-center gap-2"><i class="fa-solid fa-microscope text-indigo-400"></i>Material Inspector</h2>
+          <span id="mat-class" class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">igneous-rock</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div><span class="text-slate-400 block text-[11px]">Young's Modulus (E)</span><span id="mat-modulus" class="font-mono text-slate-100 font-bold text-sm">60.0 GPa</span></div>
+          <div><span class="text-slate-400 block text-[11px]">Friction Coeff (μ)</span><span id="mat-friction" class="font-mono text-cyan-400 font-bold text-sm">0.620</span></div>
+          <div><span class="text-slate-400 block text-[11px]">Shear Limit</span><span id="mat-shear" class="font-mono text-slate-100 font-bold text-sm">0.682 N</span></div>
+          <div><span class="text-slate-400 block text-[11px]">Safety Margin</span><span id="mat-margin" class="font-mono text-emerald-400 font-bold text-sm">97.6%</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lg:col-span-8 flex flex-col gap-6">
+      <div class="glass-panel rounded-2xl p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2"><i class="fa-solid fa-hand text-purple-400"></i><h2 class="text-xs font-bold font-mono text-slate-200 uppercase tracking-wider">Multi-Digit Topology • Dexterous Manipulator</h2></div>
+          <span class="text-[10px] font-mono text-slate-400">JPL DEXTEROUS GRID</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="selectDigit('thumb')" id="btn-thumb" class="digit-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer"><span class="w-2 h-2 rounded-full bg-slate-500"></span> Thumb</button>
+          <button onclick="selectDigit('index')" id="btn-index" class="digit-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer"><span class="w-2 h-2 rounded-full bg-slate-500"></span> Index</button>
+          <button onclick="selectDigit('middle')" id="btn-middle" class="digit-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer"><span class="w-2 h-2 rounded-full bg-slate-500"></span> Middle</button>
+          <button onclick="selectDigit('full')" id="btn-full" class="digit-btn bg-purple-600 text-white px-4 py-2 rounded-xl border border-purple-400 text-xs font-mono font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-all cursor-pointer"><span class="w-2 h-2 rounded-full bg-purple-300 animate-pulse"></span> Full Hand (All Patch)</button>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 shadow-xl relative min-h-[380px] flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping"></span><h2 class="text-xs font-bold font-mono tracking-wider text-slate-200 uppercase">3D Gel Deformation • Tactile Surface Mesh</h2></div>
+          <span class="text-[10px] text-purple-300 font-mono bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800">Vertex Z = Gel Displacement (mm)</span>
+        </div>
+        <div id="three-container" class="w-full flex-1 min-h-[300px] rounded-xl overflow-hidden bg-slate-950/90 border border-slate-800 relative cursor-grab active:cursor-grabbing">
+          <div class="absolute bottom-3 left-3 pointer-events-none bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-[10px] text-slate-400 font-mono"><i class="fa-solid fa-rotate mr-1"></i> Drag to rotate • Scroll to zoom • Active contact cones rendered</div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2"><i class="fa-solid fa-wave-square text-cyan-400"></i><h2 class="text-xs font-bold font-mono text-cyan-300 uppercase tracking-wider">Acoustic-Slip Spectrogram • E-Skin</h2></div>
+          <div class="flex items-center gap-4 text-xs font-mono">
+            <span class="text-slate-400">Dominant Freq: <strong id="spec-freq" class="text-cyan-400">314.3 Hz</strong></span>
+            <span class="text-slate-400">Stick-Slip Energy: <strong id="spec-energy" class="text-purple-400">1.084</strong></span>
+          </div>
+        </div>
+        <div class="w-full h-24 bg-slate-950 rounded-xl border border-slate-800 p-2 overflow-hidden flex items-end">
+          <canvas id="spectrogram-canvas" class="w-full h-full block"></canvas>
+        </div>
+        <p class="text-[10px] text-slate-500 font-mono mt-2 text-right">Stick-slip micro-vibrations • Harmonic spectrum (12 bins dynamic FFT)</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="chat-widget-container" class="fixed bottom-6 right-6 z-50">
+    <button id="chat-trigger-btn" onclick="toggleChatDrawer()" class="flex items-center gap-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-3.5 rounded-full shadow-2xl shadow-purple-600/40 border border-purple-400/40 transition-all transform hover:scale-105 active:scale-95 cursor-pointer group">
+      <div class="relative"><i class="fa-solid fa-sparkles text-lg text-purple-200 group-hover:rotate-12 transition-transform"></i><span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-950 animate-pulse"></span></div>
+      <span class="font-bold text-sm tracking-wide">Afferent-Omni Chat</span>
+    </button>
+    <div id="chat-box" class="hidden w-[390px] h-[550px] bg-slate-900/95 border border-purple-500/30 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-800/90 border-b border-purple-500/20">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-400/40 flex items-center justify-center"><i class="fa-solid fa-robot text-purple-300 text-sm"></i></div>
+          <div>
+            <div class="flex items-center gap-2"><h3 class="text-sm font-bold text-white tracking-wide">Afferent-Omni Chat</h3><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span></div>
+            <p class="text-[10px] text-purple-300 font-mono">Somatosensorial AI Assistant</p>
+          </div>
+        </div>
+        <button onclick="toggleChatDrawer()" class="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-700/50 cursor-pointer"><i class="fa-solid fa-xmark text-base"></i></button>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs font-sans">
+        <div class="flex gap-2.5 justify-start">
+          <div class="w-7 h-7 rounded-full bg-purple-600/30 border border-purple-400/40 flex items-center justify-center shrink-0"><i class="fa-solid fa-robot text-purple-300 text-xs"></i></div>
+          <div class="max-w-[82%] p-3 rounded-2xl bg-slate-800/90 text-slate-200 border border-purple-500/20 rounded-tl-none shadow-md space-y-1">
+            <p class="leading-relaxed">Hola. Soy <strong>Afferent-Omni Chat</strong>, tu asistente somatosensorial contextual. Interpreto en tiempo real la física de contacto, los reflejos neuromórficos y la topología multi-dígito.</p>
+            <span class="text-[9px] opacity-60 block text-right font-mono">JUST NOW</span>
+          </div>
+        </div>
+      </div>
+      <div id="typing-indicator" class="hidden px-4 py-2 flex items-center gap-2 text-purple-400 text-xs italic font-mono">
+        <div class="flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.2s]"></span><span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.4s]"></span></div>
+        <span>Interpretable somatosensory telemetry...</span>
+      </div>
+      <div class="px-3 py-2 bg-slate-950/70 border-t border-purple-500/10 flex gap-2 overflow-x-auto no-scrollbar">
+        <button onclick="sendQuickChip('¿Qué significa el Módulo de Young?')" class="bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap transition-all cursor-pointer">¿Qué significa Módulo Young?</button>
+        <button onclick="sendQuickChip('Explica el Arco Reflejo Neuromórfico')" class="bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap transition-all cursor-pointer">Explica Arco Reflejo</button>
+        <button onclick="sendQuickChip('Analizar espectrograma acústico')" class="bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap transition-all cursor-pointer">Espectrograma Acústico</button>
+        <button onclick="sendQuickChip('¿Cuál es el margen de seguridad?')" class="bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap transition-all cursor-pointer">Margen de Seguridad</button>
+      </div>
+      <div class="p-3 bg-slate-800/80 border-t border-purple-500/20 flex items-center gap-2">
+        <input type="text" id="chat-input" onkeydown="if(event.key === 'Enter') sendMessage()" placeholder="Pregúntale al asistente somatosensorial..." class="flex-1 bg-slate-950 border border-purple-500/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400 font-sans placeholder-slate-500">
+        <button onclick="sendMessage()" class="bg-purple-600 hover:bg-purple-500 text-white p-2.5 rounded-xl transition-all shadow-md shadow-purple-600/30 cursor-pointer active:scale-95"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeObject = 'rock';
+    let activeDigit = 'full';
+    let isStreaming = true;
+    let scene, camera, renderer, planeMesh;
+    let digitCones = [];
+
+    const objectProfiles = {
+      rock: { class: 'igneous-rock', modulus: '60.0 GPa', friction: '0.620', shear: '0.682 N', margin: '97.6%', latency: '8.8 ms', freq: '314.3 Hz', energy: '1.084' },
+      glass: { class: 'tempered-glass', modulus: '72.0 GPa', friction: '0.180', shear: '0.210 N', margin: '82.1%', latency: '11.4 ms', freq: '120.5 Hz', energy: '0.420' },
+      tissue: { class: 'biological-tissue', modulus: '0.05 GPa', friction: '0.890', shear: '0.045 N', margin: '99.2%', latency: '6.2 ms', freq: '45.0 Hz', energy: '0.110' }
+    };
+
+    function initThreeJS() {
+      const container = document.getElementById('three-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0f1d);
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(0, -18, 14);
+      camera.lookAt(0, 0, 0);
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer.domElement);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xa855f7, 1.2);
+      directionalLight.position.set(10, -10, 20);
+      scene.add(directionalLight);
+      const geometry = new THREE.PlaneGeometry(16, 16, 24, 24);
+      const material = new THREE.MeshPhongMaterial({ color: 0x1e1b4b, wireframe: true, emissive: 0x311b92, side: THREE.DoubleSide });
+      planeMesh = new THREE.Mesh(geometry, material);
+      scene.add(planeMesh);
+      createDigitCones();
+      let isDragging = false;
+      let previousMousePosition = { x: 0, y: 0 };
+      container.addEventListener('mousedown', () => isDragging = true);
+      container.addEventListener('mouseup', () => isDragging = false);
+      container.addEventListener('mouseleave', () => isDragging = false);
+      container.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+        planeMesh.rotation.z += deltaMove.x * 0.008;
+        planeMesh.rotation.x += deltaMove.y * 0.008;
+        digitCones.forEach(cone => { cone.rotation.z = planeMesh.rotation.z; cone.rotation.x = planeMesh.rotation.x; });
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+      animate3D();
+    }
+
+    function createDigitCones() {
+      digitCones.forEach(c => scene.remove(c));
+      digitCones = [];
+      const coneGeo = new THREE.ConeGeometry(0.5, 2, 16);
+      const coneMat = new THREE.MeshBasicMaterial({ color: 0xec4899 });
+      const positions = [{ x: -3, y: -2, z: 1 }, { x: -1, y: 2, z: 1 }, { x: 1, y: 3, z: 1 }, { x: 3, y: 1, z: 1 }];
+      positions.forEach(pos => {
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        cone.position.set(pos.x, pos.y, pos.z);
+        cone.rotation.x = Math.PI / 2;
+        scene.add(cone);
+        digitCones.push(cone);
+      });
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      if (isStreaming && planeMesh) {
+        const time = Date.now() * 0.003;
+        const pos = planeMesh.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const u = pos.getX(i);
+          const v = pos.getY(i);
+          const z = Math.sin(u * 0.5 + time) * Math.cos(v * 0.5 + time) * 0.4;
+          pos.setZ(i, z);
+        }
+        planeMesh.geometry.attributes.position.needsUpdate = true;
+      }
+      renderer.render(scene, camera);
+    }
+
+    function initSpectrogram() {
+      const canvas = document.getElementById('spectrogram-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      const numBars = 24;
+      function renderSpectrogram() {
+        requestAnimationFrame(renderSpectrogram);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barWidth = canvas.width / numBars;
+        for (let i = 0; i < numBars; i++) {
+          const height = isStreaming ? (Math.sin(Date.now() * 0.005 + i) * 0.4 + 0.5) * canvas.height * 0.8 : 5;
+          const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+          gradient.addColorStop(0, '#06b6d4');
+          gradient.addColorStop(0.5, '#a855f7');
+          gradient.addColorStop(1, '#ec4899');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(i * barWidth + 2, canvas.height - height, barWidth - 4, height);
+        }
+      }
+      renderSpectrogram();
+    }
+
+    function switchObject(type) {
+      activeObject = type;
+      const p = objectProfiles[type];
+      document.getElementById('mat-class').innerText = p.class;
+      document.getElementById('mat-modulus').innerText = p.modulus;
+      document.getElementById('mat-friction').innerText = p.friction;
+      document.getElementById('mat-shear').innerText = p.shear;
+      document.getElementById('mat-margin').innerText = p.margin;
+      document.getElementById('edge-latency').innerText = p.latency.replace(' ms', '');
+      document.getElementById('spec-freq').innerText = p.freq;
+      document.getElementById('spec-energy').innerText = p.energy;
+      addReflexLog(`Material changed to [${p.class}]. Calibration updated.`);
+    }
+
+    function selectDigit(digit) {
+      activeDigit = digit;
+      document.querySelectorAll('.digit-btn').forEach(btn => {
+        btn.classList.remove('bg-purple-600', 'text-white', 'shadow-lg');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      const activeBtn = document.getElementById(`btn-${digit}`);
+      activeBtn.classList.add('bg-purple-600', 'text-white', 'shadow-lg');
+      digitCones.forEach((cone, idx) => {
+        if (digit === 'full') cone.visible = true;
+        else if (digit === 'thumb' && idx === 0) cone.visible = true;
+        else if (digit === 'index' && idx === 1) cone.visible = true;
+        else if (digit === 'middle' && idx === 2) cone.visible = true;
+        else cone.visible = false;
+      });
+      addReflexLog(`Multi-digit target updated: [${digit.toUpperCase()}].`);
+    }
+
+    function toggleStream() {
+      isStreaming = !isStreaming;
+      const btn = document.getElementById('stream-toggle-btn');
+      if (isStreaming) {
+        btn.innerText = 'ACTIVE STREAM';
+        btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md shadow-purple-600/30 cursor-pointer';
+      } else {
+        btn.innerText = 'PAUSED';
+        btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all cursor-pointer';
+      }
+    }
+
+    function updateUth(val) { document.getElementById('uth-val').innerText = `${val}%`; }
+    function updateFmax(val) { document.getElementById('fmax-val').innerText = `${parseFloat(val).toFixed(2)} N`; }
+    function triggerInference() { addReflexLog(`Manual Zero-Shot Inference re-triggered for [${activeObject}].`); }
+    function addReflexLog(msg) {
+      const container = document.getElementById('reflex-log');
+      const timeStr = new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit', fractionalSecondDigits: 2 });
+      const p = document.createElement('p');
+      p.innerText = `[${timeStr}] ${msg}`;
+      container.prepend(p);
+    }
+
+    function toggleChatDrawer() {
+      const box = document.getElementById('chat-box');
+      const trigger = document.getElementById('chat-trigger-btn');
+      if (box.classList.contains('hidden')) { box.classList.remove('hidden'); trigger.classList.add('hidden'); }
+      else { box.classList.add('hidden'); trigger.classList.remove('hidden'); }
+    }
+    function sendQuickChip(text) { document.getElementById('chat-input').value = text; sendMessage(); }
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      appendChatMessage('user', text);
+      input.value = '';
+      document.getElementById('typing-indicator').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('typing-indicator').classList.add('hidden');
+        const reply = generateContextualReply(text);
+        appendChatMessage('assistant', reply);
+      }, 900);
+    }
+    function appendChatMessage(sender, text) {
+      const container = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `flex gap-2.5 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (sender === 'assistant') {
+        msgDiv.innerHTML = `<div class="w-7 h-7 rounded-full bg-purple-600/30 border border-purple-400/40 flex items-center justify-center shrink-0"><i class="fa-solid fa-robot text-purple-300 text-xs"></i></div><div class="max-w-[82%] p-3 rounded-2xl bg-slate-800/90 text-slate-200 border border-purple-500/20 rounded-tl-none shadow-md space-y-1"><p class="leading-relaxed">${text}</p><span class="text-[9px] opacity-60 block text-right font-mono">${timeStr}</span></div>`;
+      } else {
+        msgDiv.innerHTML = `<div class="max-w-[82%] p-3 rounded-2xl bg-purple-600 text-white rounded-tr-none shadow-md space-y-1"><p class="leading-relaxed">${text}</p><span class="text-[9px] opacity-80 block text-right font-mono">${timeStr}</span></div><div class="w-7 h-7 rounded-full bg-indigo-600/40 border border-indigo-400/40 flex items-center justify-center shrink-0"><i class="fa-solid fa-user text-indigo-200 text-xs"></i></div>`;
+      }
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+    function generateContextualReply(query) {
+      const q = query.toLowerCase();
+      const p = objectProfiles[activeObject];
+      if (q.includes('young') || q.includes('módulo') || q.includes('elasticidad')) {
+        return `El Módulo de Young registrado para <strong>${p.class}</strong> es de <strong>${p.modulus}</strong>. Representa la rigidez estructural frente a la compresión de los actuadores táctiles.`;
+      } else if (q.includes('reflejo') || q.includes('latencia') || q.includes('tesla')) {
+        return `El Arco Reflejo Neuromórfico está ejecutándose en el borde a <strong>${p.latency}</strong>. Intercepta micro-deslizamientos antes de que el modelo de visión central tome decisiones.`;
+      } else if (q.includes('espectrograma') || q.includes('acústico') || q.includes('stick-slip')) {
+        return `El espectrograma acústico-táctil captura armónicos de micro-fricción dynamic a <strong>${p.freq}</strong> con una energía stick-slip de <strong>${p.energy}</strong>.`;
+      } else if (q.includes('seguridad') || q.includes('margen')) {
+        return `El margen de seguridad actual es del <strong>${p.margin}</strong>. El motor tribológico garantiza que el presupuesto de fuerza F_max no sobrepase el límite de desgarro de la superficie.`;
+      } else {
+        return `Analizando tu consulta bajo el motor **Afferent-Omni**. Para el objetivo **${p.class}**, el sistema mantiene el bucle cerrado a 50Hz con ${activeDigit.toUpperCase()} activo.`;
+      }
+    }
+
+    window.onload = function() { initThreeJS(); initSpectrogram(); };
+  </script>
+</body>
+</html>
+PYEOF
