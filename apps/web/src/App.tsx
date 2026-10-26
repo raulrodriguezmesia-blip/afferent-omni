@@ -20,6 +20,13 @@ import { MaterialCalibration } from './components/MaterialCalibration';
 import { ComplianceReport } from './components/ComplianceReport';
 import { GraspPlanViewer } from './components/GraspPlanViewer';
 import { AnomalyAlert } from './components/AnomalyAlert';
+import { LiveCharts } from './components/LiveCharts';
+import { PresentationMode } from './components/PresentationMode';
+import { KeyboardShortcuts, ShortcutHelp } from './components/KeyboardShortcuts';
+import { PerformanceMonitor } from './components/PerformanceMonitor';
+import { SpaceMode } from './components/SpaceMode';
+import { SettingsPanel } from './components/SettingsPanel';
+import { ToastProvider } from './components/Toast';
 import './styles/index.css';
 
 function stressToCells(frame: TactileStreamFrame): TactileCell[] {
@@ -52,6 +59,10 @@ function App() {
   const [fMax, setFMax] = useState(1.8);
   const [selectedDigit, setSelectedDigit] = useState('full');
   const [streamFrames, setStreamFrames] = useState<any[]>([]);
+  const [apiBase, setApiBase] = useState('http://127.0.0.1:8002');
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [shortcutHelp, setShortcutHelp] = useState(false);
+  const [spaceMode, setSpaceMode] = useState(false);
 
   const { frame, connected, sendControls } = useTactileStream('ws://localhost:8002/ws/v1/tactile-stream');
 
@@ -121,6 +132,32 @@ function App() {
 
   const activeDigits = DIGIT_MAP[selectedDigit] || ['thumb', 'index', 'middle'];
 
+  const shortcuts = [
+    { key: ' ', action: () => setStreaming((p) => !p), description: 'Toggle live stream' },
+    { key: '1', action: () => setSelectedDigit('thumb'), description: 'Select Thumb' },
+    { key: '2', action: () => setSelectedDigit('index'), description: 'Select Index' },
+    { key: '3', action: () => setSelectedDigit('middle'), description: 'Select Middle' },
+    { key: '4', action: () => setSelectedDigit('full'), description: 'Select Full Hand' },
+    { key: 'r', action: () => runInference(), description: 'Run inference' },
+    { key: 'c', action: () => {}, description: 'Open chat (click button)' },
+    { key: 'p', action: () => setPresentationMode(true), description: 'Presentation mode' },
+    { key: '?', shift: true, action: () => setShortcutHelp(true), description: 'Show shortcuts' },
+    { key: 'Escape', action: () => { setPresentationMode(false); setShortcutHelp(false); }, description: 'Close modals' },
+  ];
+
+  const presentationSteps = [
+    { title: 'Welcome to Afferent-Omni', description: 'A causal vision-to-touch prior system for dexterous robotic manipulation. Let us walk through the key capabilities.' },
+    { title: 'Tactile CoT & Afferent-Core', description: 'SAM 3.1 constructs a 32×32 spatial contact grid. Muse Wonder infers material properties and stress concentrations.' },
+    { title: 'Sim2Real Safety Shield', description: 'Dynamic force budget with uncertainty gating. Authorized safe grasp when uncertainty is below threshold.' },
+    { title: '3D Gel Deformation', description: 'Real-time elastomer mesh deformation with glow spheres (green→red by force) and shear vector arrows.' },
+    { title: 'Neuromorphic Reflex HUD', description: 'Edge computing reflex arc at <10 ms. Intercepts slip before central VLM processing.' },
+    { title: 'Multi-Digit Topology', description: 'NASA JPL-style contact patches with torque balance index and center of pressure.' },
+    { title: 'Acoustic-Slip Spectrogram', description: 'Stick-slip micro-vibration analysis at 314.3 Hz for surface discrimination.' },
+    { title: 'Material Calibration', description: 'Bayesian micro-probe calibration for unknown materials.' },
+    { title: 'Compliance Report', description: 'ISO 10218-1, ISO/TS 15066, IEC 61508 conformity validation.' },
+    { title: 'Afferent-Omni Chat', description: 'AI copilot with real-time telemetry context, natural language queries, and suggested followups.' },
+  ];
+
   // Omni telemetry resolution
   const neuromorphic: NeuromorphicReflex | null = activeFrame?.neuromorphic_reflex || data?.neuromorphic_reflex || null;
   const multiDigit: MultiDigitTopology | null = activeFrame?.multi_digit_topology || data?.multi_digit_topology || null;
@@ -140,7 +177,11 @@ function App() {
   const physical = data?.physical_matrix;
 
   return (
-    <div className="app">
+    <ToastProvider>
+      <div className="app">
+        <KeyboardShortcuts shortcuts={shortcuts} />
+        <ShortcutHelp shortcuts={shortcuts} visible={shortcutHelp} onClose={() => setShortcutHelp(false)} />
+        <PresentationMode active={presentationMode} onToggle={() => setPresentationMode(false)} steps={presentationSteps} />
       <header>
         <div className="logo">
           <div className="logo-dot" />
@@ -176,6 +217,22 @@ function App() {
             onParamsChange={(u, f) => sendControls({ u_threshold: u, f_max: f })}
           />
           <NeuromorphicReflexHUD reflex={neuromorphic} />
+          <LiveCharts streamFrames={streamFrames} />
+          <PerformanceMonitor streamFrames={streamFrames} />
+          <SpaceMode active={spaceMode} onToggle={() => setSpaceMode(!spaceMode)} objectLabel={objectLabel} />
+          <SettingsPanel apiBase={apiBase} onApiBaseChange={setApiBase} />
+          <button
+            onClick={() => setPresentationMode(true)}
+            style={{ background: 'linear-gradient(90deg,#8b5cf6,#a855f7)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', cursor: 'pointer', fontSize: 11, width: '100%' }}
+          >
+            🎬 Presentation Mode
+          </button>
+          <button
+            onClick={() => setShortcutHelp(true)}
+            style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, padding: '8px 16px', color: '#c4b5fd', cursor: 'pointer', fontSize: 11, width: '100%' }}
+          >
+            ⌨️ Keyboard Shortcuts (?)
+          </button>
         </div>
         <div className="column" style={{ alignItems: 'center', gap: 24 }}>
           <MultiDigitSelector selected={selectedDigit} onSelect={setSelectedDigit} topology={multiDigit} />
@@ -224,7 +281,8 @@ function App() {
           acousticFrictionProfile: acoustic,
         }}
       />
-    </div>
+      </div>
+    </ToastProvider>
   );
 }
 
