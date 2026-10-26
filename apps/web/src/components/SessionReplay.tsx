@@ -128,6 +128,32 @@ export const SessionReplay: React.FC<SessionReplayProps> = ({ apiBase }) => {
               <div>Gating: {frame.gating_decision} | Uncertainty: {(frame.uncertainty_score * 100).toFixed(1)}%</div>
             </div>
           )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <a
+              href={`${apiBase}/api/v1/sessions/${selectedSession}/export`}
+              download={`session_${selectedSession}.json`}
+              style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, padding: '6px 12px', color: '#c4b5fd', cursor: 'pointer', fontSize: 11, textDecoration: 'none', display: 'inline-block' }}
+            >
+              📥 Export JSON
+            </a>
+            <button
+              onClick={() => {
+                if (frame) {
+                  const csv = 't_ms,phase,force_n,uncertainty,gating\n' + `${frame.t_ms},${frame.phase},${frame.applied_force_n},${frame.uncertainty_score},${frame.gating_decision}`;
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `frame_${frameIndex}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }
+              }}
+              style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, padding: '6px 12px', color: '#c4b5fd', cursor: 'pointer', fontSize: 11 }}
+            >
+              📄 Export CSV Frame
+            </button>
+          </div>
         </>
       )}
       {sessions.length === 0 && (

@@ -99,10 +99,11 @@ async def tactile_stream(websocket: WebSocket):
     f_max = 1.8
     material = resolve_material("Thin-Walled Glassware (Wine Stemware)")
     active_digits = ["thumb", "index", "middle"]
+    space_mode = False
 
     # Allow client to push control params at any time.
     async def control_listener():
-        nonlocal u_th, f_max, material, active_digits
+        nonlocal u_th, f_max, material, active_digits, space_mode
         while True:
             try:
                 msg = await websocket.receive_text()
@@ -115,6 +116,8 @@ async def tactile_stream(websocket: WebSocket):
                     material = resolve_material(str(data["object_label"]))
                 if "active_digits" in data:
                     active_digits = list(data["active_digits"])
+                if "space_mode" in data:
+                    space_mode = bool(data["space_mode"])
             except WebSocketDisconnect:
                 break
             except Exception:

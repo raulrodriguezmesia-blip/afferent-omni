@@ -21,12 +21,13 @@ import { ComplianceReport } from './components/ComplianceReport';
 import { GraspPlanViewer } from './components/GraspPlanViewer';
 import { AnomalyAlert } from './components/AnomalyAlert';
 import { LiveCharts } from './components/LiveCharts';
+import { DigitalTwin } from './components/DigitalTwin';
 import { PresentationMode } from './components/PresentationMode';
 import { KeyboardShortcuts, ShortcutHelp } from './components/KeyboardShortcuts';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { SpaceMode } from './components/SpaceMode';
 import { SettingsPanel } from './components/SettingsPanel';
-import { ToastProvider } from './components/Toast';
+import { ToastProvider, useToast } from './components/Toast';
 import './styles/index.css';
 
 function stressToCells(frame: TactileStreamFrame): TactileCell[] {
@@ -47,7 +48,8 @@ function stressToCells(frame: TactileStreamFrame): TactileCell[] {
   return cells;
 }
 
-function App() {
+function AppContent() {
+  const toast = useToast();
   const [objectLabel, setObjectLabel] = useState('Wine Glass');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AfferentResponse | null>(null);
@@ -68,9 +70,13 @@ function App() {
 
   useEffect(() => {
     if (streaming) {
-      sendControls({ u_threshold: uThreshold, f_max: fMax, object_label: objectLabel, active_digits: DIGIT_MAP[selectedDigit] || ['thumb', 'index', 'middle'] });
+      sendControls({
+        u_threshold: uThreshold, f_max: fMax, object_label: objectLabel,
+        active_digits: DIGIT_MAP[selectedDigit] || ['thumb', 'index', 'middle'],
+        space_mode: spaceMode,
+      });
     }
-  }, [uThreshold, fMax, objectLabel, streaming, selectedDigit, sendControls]);
+  }, [uThreshold, fMax, objectLabel, streaming, selectedDigit, spaceMode, sendControls]);
 
   const runInference = async () => {
     setLoading(true);
@@ -78,8 +84,10 @@ function App() {
     try {
       const res = await predictTactile(objectLabel, 'dummy');
       setData(res);
+      toast.addToast(`Inference complete: ${objectLabel} analyzed`, 'success');
     } catch (e: any) {
       setError(e.message);
+      toast.addToast(`Inference failed: ${e.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -146,12 +154,12 @@ function App() {
   ];
 
   const presentationSteps = [
-    { title: 'Welcome to Afferent-Omni', description: 'A causal vision-to-touch prior system for dexterous robotic manipulation. Let us walk through the key capabilities.' },
-    { title: 'Tactile CoT & Afferent-Core', description: 'SAM 3.1 constructs a 32×32 spatial contact grid. Muse Wonder infers material properties and stress concentrations.' },
-    { title: 'Sim2Real Safety Shield', description: 'Dynamic force budget with uncertainty gating. Authorized safe grasp when uncertainty is below threshold.' },
-    { title: '3D Gel Deformation', description: 'Real-time elastomer mesh deformation with glow spheres (green→red by force) and shear vector arrows.' },
+    { title: 'Welcome to Afferent-Omni', description: 'A causal vision-to-touch prior system for dexterous robotic manipulation. Let us walk through the key capabilities.', action: () => { setViewMode('3d'); } },
+    { title: 'Tactile CoT & Afferent-Core', description: 'SAM 3.1 constructs a 32×32 spatial contact grid. Muse Wonder infers material properties and stress concentrations.', action: () => { runInference(); } },
+    { title: 'Sim2Real Safety Shield', description: 'Dynamic force budget with uncertainty gating. Authorized safe grasp when uncertainty is below threshold.', action: () => { setStreaming(true); } },
+    { title: '3D Gel Deformation', description: 'Real-time elastomer mesh deformation with glow spheres (green→red by force) and shear vector arrows.', action: () => { setViewMode('3d'); } },
     { title: 'Neuromorphic Reflex HUD', description: 'Edge computing reflex arc at <10 ms. Intercepts slip before central VLM processing.' },
-    { title: 'Multi-Digit Topology', description: 'NASA JPL-style contact patches with torque balance index and center of pressure.' },
+    { title: 'Multi-Digit Topology', description: 'NASA JPL-style contact patches with torque balance index and center of pressure.', action: () => { setSelectedDigit('full'); } },
     { title: 'Acoustic-Slip Spectrogram', description: 'Stick-slip micro-vibration analysis at 314.3 Hz for surface discrimination.' },
     { title: 'Material Calibration', description: 'Bayesian micro-probe calibration for unknown materials.' },
     { title: 'Compliance Report', description: 'ISO 10218-1, ISO/TS 15066, IEC 61508 conformity validation.' },
@@ -267,6 +275,7 @@ function App() {
           )}
           <MaterialCalibration apiBase="http://127.0.0.1:8002" objectLabel={objectLabel} />
           <GraspPlanViewer apiBase="http://127.0.0.1:8002" objectLabel={objectLabel} />
+          <DigitalTwin apiBase="http://127.0.0.1:8002" objectLabel={objectLabel} />
           <AnomalyAlert apiBase="http://127.0.0.1:8002" context={{ streamFrames }} />
           <ComplianceReport apiBase="http://127.0.0.1:8002" context={{ force_budget: data?.force_budget, neuromorphicReflex: neuromorphic, tactile_reasoning_cot: data?.tactile_reasoning_cot, benchmark_telemetry: data?.benchmark_telemetry }} />
           <SessionReplay apiBase="http://127.0.0.1:8002" />
@@ -286,4 +295,6 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return <AppContent />;
+}

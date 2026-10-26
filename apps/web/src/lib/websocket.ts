@@ -35,6 +35,7 @@ export interface StreamControls {
   f_max?: number;
   object_label?: string;
   active_digits?: string[];
+  space_mode?: boolean;
 }
 
 export function useTactileStream(url: string) {
