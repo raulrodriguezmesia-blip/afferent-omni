@@ -1,8 +1,59 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+import os
+import json
 from typing import List, Optional, Dict, Any
 
 router = APIRouter(prefix="/api/v1", tags=["Afferent-Omni Chat"])
+
+async def _try_llm(query: str, context: dict) -> Optional[str]:
+    """Try to get a response from an LLM if API key is configured."""
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return None
+    try:
+        import httpx
+        system_prompt = (
+            "You are Afferent-Omni, a somatosensorial AI copilot for a robotic manipulation dashboard. "
+            "You have access to real-time telemetry. Answer in English, technically and naturally.\n\n"
+            "Current telemetry context (JSON):\n" + json.dumps(context, indent=2)[:3000]
+        )
+        if os.getenv("OPENAI_API_KEY"):
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={
+                        "model": "gpt-4o-mini",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": query},
+                        ],
+                        "max_tokens": 300,
+                        "temperature": 0.7,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"]
+        elif os.getenv("ANTHROPIC_API_KEY"):
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"},
+                    json={
+                        "model": "claude-3-haiku-20240307",
+                        "max_tokens": 300,
+                        "system": system_prompt,
+                        "messages": [{"role": "user", "content": query}],
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()["content"][0]["text"]
+    except Exception:
+        return None
+    return None
+
+
 
 class ChatRequest(BaseModel):
     query: str
@@ -15,8 +66,22 @@ class ChatResponse(BaseModel):
 
 @router.post("/chat-assistant", response_model=ChatResponse)
 async def chat_assistant(payload: ChatRequest):
-    query_lower = payload.query.lower()
+    query = (payload.query or "").strip()
+    query_lower = query.lower()
     context = payload.context or {}
+    if not isinstance(context, dict):
+        context = {}
+
+    # Try LLM first if API key is configured
+    llm_resp = await _try_llm(query, context)
+    if llm_resp:
+        return ChatResponse(
+            response=llm_resp,
+            category="llm",
+            suggested_followups=["What is Young's Modulus?", "Explain the Neuromorphic Reflex Arc", "Show TactoEval metrics"],
+        )
+
+    # Extract live telemetry payload from context safely
 
     # Extract live telemetry payload from context safely
     material = context.get("material_profile", {}) or {}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { predictTactile } from './lib/api';
 import { useTactileStream, type TactileStreamFrame } from './lib/websocket';
 import { type AfferentResponse, type TactileCell, type NeuromorphicReflex, type MultiDigitTopology, type AcousticFrictionProfile } from './types/afferent';
@@ -7,28 +7,31 @@ import TactileCoTPanel from './components/TactileCoTPanel';
 import SafetyShield from './components/SafetyShield';
 import ForceBudget from './components/ForceBudget';
 import TactoEval from './components/TactoEval';
-import Tactile3DViewer from './components/Tactile3DViewer';
 import MaterialInspector from './components/MaterialInspector';
 import ClosedLoopControl from './components/ClosedLoopControl';
-import NeuromorphicReflexHUD from './components/NeuromorphicReflexHUD';
 import MultiDigitSelector, { DIGIT_MAP } from './components/MultiDigitSelector';
-import AcousticSpectrogram from './components/AcousticSpectrogram';
-import { AfferentChatDrawer } from './components/AfferentChatDrawer';
-import { CustomDropdown } from './components/CustomDropdown';
-import { SessionReplay } from './components/SessionReplay';
-import { MaterialCalibration } from './components/MaterialCalibration';
-import { ComplianceReport } from './components/ComplianceReport';
-import { GraspPlanViewer } from './components/GraspPlanViewer';
-import { AnomalyAlert } from './components/AnomalyAlert';
-import { LiveCharts } from './components/LiveCharts';
-import { DigitalTwin } from './components/DigitalTwin';
-import { PresentationMode } from './components/PresentationMode';
-import { KeyboardShortcuts, ShortcutHelp } from './components/KeyboardShortcuts';
-import { PerformanceMonitor } from './components/PerformanceMonitor';
-import { SpaceMode } from './components/SpaceMode';
-import { SettingsPanel } from './components/SettingsPanel';
 import { ToastProvider, useToast } from './components/Toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/index.css';
+
+const Tactile3DViewer = lazy(() => import('./components/Tactile3DViewer'));
+const AcousticSpectrogram = lazy(() => import('./components/AcousticSpectrogram').then(m => ({ default: m.default })));
+const NeuromorphicReflexHUD = lazy(() => import('./components/NeuromorphicReflexHUD').then(m => ({ default: m.default })));
+const AfferentChatDrawer = lazy(() => import('./components/AfferentChatDrawer').then(m => ({ default: m.AfferentChatDrawer })));
+const CustomDropdown = lazy(() => import('./components/CustomDropdown').then(m => ({ default: m.CustomDropdown })));
+const SessionReplay = lazy(() => import('./components/SessionReplay').then(m => ({ default: m.SessionReplay })));
+const MaterialCalibration = lazy(() => import('./components/MaterialCalibration').then(m => ({ default: m.MaterialCalibration })));
+const ComplianceReport = lazy(() => import('./components/ComplianceReport').then(m => ({ default: m.ComplianceReport })));
+const GraspPlanViewer = lazy(() => import('./components/GraspPlanViewer').then(m => ({ default: m.GraspPlanViewer })));
+const AnomalyAlert = lazy(() => import('./components/AnomalyAlert').then(m => ({ default: m.AnomalyAlert })));
+const LiveCharts = lazy(() => import('./components/LiveCharts').then(m => ({ default: m.LiveCharts })));
+const DigitalTwin = lazy(() => import('./components/DigitalTwin').then(m => ({ default: m.DigitalTwin })));
+const PresentationMode = lazy(() => import('./components/PresentationMode').then(m => ({ default: m.PresentationMode })));
+const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').then(m => ({ default: m.KeyboardShortcuts })));
+const ShortcutHelp = lazy(() => import('./components/KeyboardShortcuts').then(m => ({ default: m.ShortcutHelp })));
+const PerformanceMonitor = lazy(() => import('./components/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
+const SpaceMode = lazy(() => import('./components/SpaceMode').then(m => ({ default: m.SpaceMode })));
+const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(m => ({ default: m.SettingsPanel })));
 
 function stressToCells(frame: TactileStreamFrame): TactileCell[] {
   const stress = frame.stress_distribution_kpa;
@@ -186,6 +189,7 @@ function AppContent() {
 
   return (
     <ToastProvider>
+      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#9ca3af', fontSize: 14 }}>Loading Afferent-Omni...</div>}>
       <div className="app">
         <KeyboardShortcuts shortcuts={shortcuts} />
         <ShortcutHelp shortcuts={shortcuts} visible={shortcutHelp} onClose={() => setShortcutHelp(false)} />
@@ -247,7 +251,9 @@ function AppContent() {
           {viewMode === '2d' ? (
             <TactileHeatmap cells={heatmapCells} gridSize={gridSize} />
           ) : (
-            <Tactile3DViewer deformationField={deformationField} stressField={stressField} gridSize={gridSize} activeDigits={activeDigits} appliedForce={activeFrame ? activeFrame.applied_force_n : (data?.force_budget?.recommended_grasp_force_N || 1.1)} maxForceCap={activeFrame ? activeFrame.f_max_n : (data?.force_budget?.max_allowed_normal_force_N || 1.8)} />
+            <ErrorBoundary name="3D Viewer">
+              <Tactile3DViewer deformationField={deformationField} stressField={stressField} gridSize={gridSize} activeDigits={activeDigits} appliedForce={activeFrame ? activeFrame.applied_force_n : (data?.force_budget?.recommended_grasp_force_N || 1.1)} maxForceCap={activeFrame ? activeFrame.f_max_n : (data?.force_budget?.max_allowed_normal_force_N || 1.8)} />
+            </ErrorBoundary>
           )}
           {data && <TactoEval telemetry={data.benchmark_telemetry} />}
           {activeFrame && (
@@ -291,6 +297,7 @@ function AppContent() {
         }}
       />
       </div>
+      </Suspense>
     </ToastProvider>
   );
 }
