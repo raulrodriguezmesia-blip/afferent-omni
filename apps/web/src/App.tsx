@@ -15,6 +15,11 @@ import MultiDigitSelector, { DIGIT_MAP } from './components/MultiDigitSelector';
 import AcousticSpectrogram from './components/AcousticSpectrogram';
 import { AfferentChatDrawer } from './components/AfferentChatDrawer';
 import { CustomDropdown } from './components/CustomDropdown';
+import { SessionReplay } from './components/SessionReplay';
+import { MaterialCalibration } from './components/MaterialCalibration';
+import { ComplianceReport } from './components/ComplianceReport';
+import { GraspPlanViewer } from './components/GraspPlanViewer';
+import { AnomalyAlert } from './components/AnomalyAlert';
 import './styles/index.css';
 
 function stressToCells(frame: TactileStreamFrame): TactileCell[] {
@@ -46,6 +51,7 @@ function App() {
   const [uThreshold, setUThreshold] = useState(0.25);
   const [fMax, setFMax] = useState(1.8);
   const [selectedDigit, setSelectedDigit] = useState('full');
+  const [streamFrames, setStreamFrames] = useState<any[]>([]);
 
   const { frame, connected, sendControls } = useTactileStream('ws://localhost:8002/ws/v1/tactile-stream');
 
@@ -101,6 +107,17 @@ function App() {
   } : null;
 
   const displayCot = streamCot || cotData;
+
+  // Collect stream frames for anomaly detection
+  useEffect(() => {
+    if (activeFrame) {
+      setStreamFrames((prev) => {
+        const next = [...prev, activeFrame];
+        if (next.length > 200) return next.slice(-200);
+        return next;
+      });
+    }
+  }, [activeFrame]);
 
   const activeDigits = DIGIT_MAP[selectedDigit] || ['thumb', 'index', 'middle'];
 
@@ -191,6 +208,11 @@ function App() {
               <div className="status-bar" style={{ marginTop: 16 }}>Schema Validated • 32x32 Spatial Grid • Sim2Real Safety Shield • Omni-Tier Telemetry</div>
             </div>
           )}
+          <MaterialCalibration apiBase="http://127.0.0.1:8002" objectLabel={objectLabel} />
+          <GraspPlanViewer apiBase="http://127.0.0.1:8002" objectLabel={objectLabel} />
+          <AnomalyAlert apiBase="http://127.0.0.1:8002" context={{ streamFrames }} />
+          <ComplianceReport apiBase="http://127.0.0.1:8002" context={{ force_budget: data?.force_budget, neuromorphicReflex: neuromorphic, tactile_reasoning_cot: data?.tactile_reasoning_cot, benchmark_telemetry: data?.benchmark_telemetry }} />
+          <SessionReplay apiBase="http://127.0.0.1:8002" />
         </div>
       </main>
       {error && <div style={{ textAlign: 'center', color: 'var(--danger)', marginBottom: 24 }}>{error}</div>}

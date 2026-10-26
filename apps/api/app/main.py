@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import health, infer, stream, chat
+from app.routers import health, infer, stream, chat, replay, anomaly, calibration, grasp, compliance
 
 app = FastAPI(
     title="Afferent Somatosensory API",
@@ -22,6 +22,11 @@ app.include_router(health.router)
 app.include_router(infer.router)
 app.include_router(stream.router)
 app.include_router(chat.router)
+app.include_router(replay.router)
+app.include_router(anomaly.router)
+app.include_router(calibration.router)
+app.include_router(grasp.router)
+app.include_router(compliance.router)
 
 @app.get("/")
 def root():

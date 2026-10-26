@@ -95,7 +95,37 @@ async def chat_assistant(payload: ChatRequest):
         cat = "system"
         followups = ["Explain the Sim2Real Safety Shield", "View TactoEval metrics"]
 
-    # 9. Natural Intelligent Fallback
+    # 9. Material Calibration
+    elif any(k in query_lower for k in ["calibrate", "calibration", "probe", "bayesian", "fine-tune", "finetune"]):
+        resp = "Material calibration uses exploratory micro-contact probes (~0.2 N) with Bayesian-inspired heuristics to refine Young's Modulus, friction coefficient, and shear limit for unknown materials. Run calibration from the Material Calibration panel."
+        cat = "calibration"
+        followups = ["What is Young's Modulus?", "View material profile"]
+
+    # 10. Anomaly Detection
+    elif any(k in query_lower for k in ["anomaly", "anomalies", "degradation", "predictive", "maintenance", "drift"]):
+        resp = "The anomaly detector monitors force spikes, uncertainty drift, latency degradation, excessive stick-slip energy, and actuator drift trends using statistical heuristics. Risk levels: low, medium, high. Run checks from the Anomaly Detection panel."
+        cat = "anomaly"
+        followups = ["Check stream status", "Explain the Neuromorphic Reflex Arc"]
+
+    # 11. Compliance & Certification
+    elif any(k in query_lower for k in ["compliance", "certification", "iso", "conformant", "standard", "regulatory"]):
+        resp = "The compliance report validates telemetry against ISO 10218-1, ISO/TS 15066, IEC 61508, Sim2Real, and TactoEval standards. Generates a pass/fail score with per-check breakdown. Run from the Compliance Report panel."
+        cat = "compliance"
+        followups = ["What is the safety margin?", "View TactoEval metrics"]
+
+    # 12. Zero-Shot Grasp Planning
+    elif any(k in query_lower for k in ["grasp", "plan", "zero-shot", "zeroshot", "strategy", "orientation", "contact points"]):
+        resp = "Zero-shot grasp planning computes an optimal grasp strategy (precision pinch, power grasp, gentle cradle, soft pinch, adaptive) from the vision prior alone, without prior training data. Includes predicted force, contact points, and confidence. Run from the Grasp Plan panel."
+        cat = "grasp"
+        followups = ["What material is currently analyzed?", "Explain the Neuromorphic Reflex Arc"]
+
+    # 13. Session Replay & Data Logging
+    elif any(k in query_lower for k in ["session", "replay", "recording", "log", "export", "history"]):
+        resp = "Session replay allows frame-by-frame playback of recorded telemetry at 50 Hz. Sessions are auto-logged during live streaming. Export full session data as JSON for post-mortem analysis and model training."
+        cat = "replay"
+        followups = ["Check stream status", "Run anomaly check"]
+
+    # 14. Natural Intelligent Fallback
     else:
         resp = f"Analyzing query '{payload.query}' against live Afferent-Omni telemetry. The system operates in a 50 Hz closed loop, harmonizing tribological physics, Sim2Real safety, and tactile neural feedback."
         cat = "general"
