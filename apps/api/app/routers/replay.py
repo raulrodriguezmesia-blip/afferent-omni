@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from typing import List, Optional, Dict, Any
 from app.services.session_store import (
     create_session, append_frame, get_session, list_sessions,
@@ -56,6 +57,24 @@ async def export_session_data(session_id: str):
     if not data:
         raise HTTPException(status_code=404, detail="Session not found")
     return data
+
+@router.get("/sessions/{session_id}/export/csv")
+async def export_session_csv(session_id: str):
+    data = export_session(session_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Session not found")
+    lines = ["t_ms,phase,applied_force_n,uncertainty_score,gating_decision,material_class"]
+    for f in data["frames"]:
+        lines.append(
+            f"{f.get('t_ms',0)},{f.get('phase','')},{f.get('applied_force_n',0)},"
+            f"{f.get('uncertainty_score',0)},{f.get('gating_decision','')},{f.get('material_class','')}"
+        )
+    csv_content = "\n".join(lines)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=session_{session_id}.csv"},
+    )
 
 @router.delete("/sessions/{session_id}")
 async def delete_session_data(session_id: str):
