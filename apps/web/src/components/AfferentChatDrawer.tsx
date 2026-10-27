@@ -6,6 +6,8 @@ interface Message {
   sender: 'user' | 'assistant';
   text: string;
   timestamp: string;
+  provider?: string;
+  providerColor?: string;
 }
 
 interface AfferentChatDrawerProps {
@@ -73,11 +75,16 @@ export const AfferentChatDrawer: React.FC<AfferentChatDrawerProps> = ({ currentC
 
       const data = await res.json();
 
+      const provider = data.category === 'nemotron' ? 'NVIDIA Nemotron' : data.category === 'llm' ? 'LLM' : 'Keyword';
+      const providerColor = data.category === 'nemotron' ? '#76B900' : data.category === 'llm' ? '#8b5cf6' : '#9ca3af';
+
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'assistant',
         text: data.response,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        provider,
+        providerColor,
       };
 
       setMessages((prev) => [...prev, botMsg]);
@@ -170,7 +177,18 @@ export const AfferentChatDrawer: React.FC<AfferentChatDrawerProps> = ({ currentC
                   borderBottomLeftRadius: m.sender === 'assistant' ? 4 : 12,
                 }}>
                   <p style={{ lineHeight: 1.6, margin: 0 }}>{m.text}</p>
-                  <span style={{ fontSize: 9, opacity: 0.6, marginTop: 4, display: 'block', textAlign: 'right' }}>{m.timestamp}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    {m.provider && m.sender === 'assistant' && (
+                      <span style={{
+                        fontSize: 8, padding: '1px 6px', borderRadius: 4,
+                        background: `${m.providerColor}20`, color: m.providerColor,
+                        border: `1px solid ${m.providerColor}40`, fontWeight: 600,
+                      }}>
+                        {m.provider === 'NVIDIA Nemotron' ? '⚡ NVIDIA Nemotron' : m.provider}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 9, opacity: 0.6 }}>{m.timestamp}</span>
+                  </div>
                 </div>
                 {m.sender === 'user' && (
                   <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(99,102,241,0.3)', border: '1px solid rgba(99,102,241,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

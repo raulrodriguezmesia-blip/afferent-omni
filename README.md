@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready%20%7C%2050Hz%20Loop-cyan?style=for-the-badge)](https://github.com/raulrodriguezmesia-blip/afferent-omni)
 [![Latency](https://img.shields.io/badge/Edge%20Reflex-8.8ms-brightgreen?style=for-the-badge)](https://github.com/raulrodriguezmesia-blip/afferent-omni)
+[![NVIDIA](https://img.shields.io/badge/NVIDIA-Nemotron%203%20Super-76B900?style=for-the-badge&logo=nvidia)](https://build.nvidia.com)
+[![Nebius](https://img.shields.io/badge/Nebius-Token%20Factory-FF6B35?style=for-the-badge)](https://nebius.com)
 
 > *"Robots see, but do not feel. Afferent gives them the intuition of touch."*
 
@@ -14,9 +16,53 @@ The platform fuses cutting-edge multimodal perception (*Meta SAM 3.1, Muse Spark
 
 ---
 
-## ⚡ Why Afferent-Omni Is Different (Competitive Market Analysis)
+## ⚡ NVIDIA Model Integration
 
-Unlike isolated tactile sensors or conventional simulators, **Afferent-Omni** acts as an end-to-end software bridge integrating pre-contact visual perception, fragility-aware tribological physics, and edge reflex arcs.
+This project is built for the **Nebius x NVIDIA Global AI Hackathon** (Physical AI Track) and integrates **NVIDIA Nemotron 3 Super 120B** via **Nebius Token Factory** as the reasoning engine for the AI copilot.
+
+### How NVIDIA Models Are Used
+
+| NVIDIA Model | Usage in Afferent-Omni | Endpoint |
+|---|---|---|
+| **Nemotron 3 Super 120B** | Real-time reasoning over tactile telemetry JSON. Provides safety assessments, material analysis, and operational recommendations. | Nebius Token Factory (`/v1/chat/completions`) |
+| **Meta SAM 3.1** | Object segmentation and 32×32 spatial contact grid construction | Meta Model API |
+| **Meta Muse Spark/Wonder/Image** | Material inference, tribological property estimation, image analysis | Meta Model API |
+
+### Why Nemotron?
+
+Unlike static keyword-matching responses, **NVIDIA Nemotron** performs genuine reasoning over live telemetry data:
+- Analyzes force budgets, uncertainty scores, and material properties
+- Provides safety assessments with physical implications
+- Suggests operational adjustments based on real-time sensor data
+- Explains tribological physics in natural language
+
+### Nebius Token Factory Integration
+
+The backend uses Nebius Token Factory as the primary LLM provider:
+
+```python
+NEBIUS_BASE_URL = "https://api.tokenfactory.nebius.ai/v1/"
+NEBIUS_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+
+# Priority: Nemotron → OpenAI → Anthropic → Keyword fallback
+async def _try_nemotron(query, context):
+    api_key = os.getenv("NEBIUS_API_KEY")
+    # Calls Nebius Token Factory with telemetry context as system prompt
+    ...
+```
+
+**Environment variables:**
+```bash
+NEBIUS_API_KEY=your-nebius-api-key
+NEBIUS_BASE_URL=https://api.tokenfactory.nebius.ai/v1/
+NEBIUS_MODEL=nvidia/nemotron-3-super-120b-a12b
+```
+
+---
+
+## ⚡ Why Afferent-Omni Is Different (Análisis Comparativo de Mercado)
+
+A diferencia de los sensores táctiles aislados o los simuladores convencionales, **Afferent-Omni** actúa como un puente de software de extremo a extremo (*End-to-End*) que integra percepción visual previa al contacto, física tribológica consciente de la fragilidad y arcos reflejos en el borde.
 
 | Dimension / Capability | GelSight / GelSight Mini | Meta DIGIT / TactileX | NVIDIA Isaac Sim / Gym | ROS 2 + MoveIt | 🛸 **Afferent-Omni** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -25,11 +71,11 @@ Unlike isolated tactile sensors or conventional simulators, **Afferent-Omni** ac
 | **Neuromorphic Edge Reflex Arc** | ❌ | ❌ | ❌ (High visual loop) | ⚠️ (RT driver dependent) | **✅ Yes (<10 ms Edge Latency)** |
 | **Acoustic Stick-Slip Spectrogram (E-Skin)** | ❌ | ❌ | ❌ | ❌ | **✅ Yes (12-bin harmonic analysis)** |
 | **50 Hz Glassmorphism 3D C2 Dashboard** | ❌ (Flat logs / SDK) | ❌ (Python utilities only) | ⚠️ (Heavy sim GUI) | ⚠️ (Traditional RViz2) | **✅ Yes (Three.js + WebSockets)** |
-| **Specialized Conversational AI Copilot** | ❌ | ❌ | ❌ | ❌ | **✅ Yes (Afferent-Omni Chat)** |
+| **Specialized Conversational AI Copilot** | ❌ | ❌ | ❌ | ❌ | **✅ Yes (NVIDIA Nemotron via Nebius)** |
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Arquitectura del Sistema
 
 ```mermaid
 graph TD
@@ -39,14 +85,16 @@ graph TD
     E[E-Skin / TactoEval Sensor] -->|Micro-vibrations 314Hz| F[Neuromorphic Reflex HUD - Edge]
     F -->|<8.8ms Slip Intercept| D
     D -->|Telemetry WebSocket 50Hz| G[C2 Dashboard Frontend React + Three.js]
-    G <-->|Real-Time Context| H[Afferent-Omni Chat AI Copilot]
+    G <-->|Real-Time Context| H[Afferent-Omni Chat AI Copilot - NVIDIA Nemotron]
+    H -->|Reasoning| I[Nebius Token Factory]
 ```
 
 ### 🛠️ Technology Stack
 - **Backend & Telemetry:** FastAPI (Python 3.10+), Uvicorn, WebSockets for bidirectional 50 Hz streaming, NLP router with real-time contextualization.
 - **Frontend UI/UX:** React 18, Vite, TypeScript, Tailwind CSS, Dark Glassmorphism (Ethos-Style UI), decoupled interactive components (CustomDropdown).
 - **3D Visualization & Physics:** Three.js, React Three Fiber, real-time 2D/3D gel deformation heatmaps, dynamic HSL glow spheres and shear force ArrowHelpers.
-- **Multimodal AI Model Stack:** Meta SAM 3.1, Meta Muse Spark, Meta Muse Wonder, Meta Muse Image.
+- **AI Model Stack:** Meta SAM 3.1, Meta Muse Spark, Meta Muse Wonder, Meta Muse Image, **NVIDIA Nemotron 3 Super 120B** (via Nebius Token Factory).
+- **Deployment:** Docker, Docker Compose, Nebius AI Cloud.
 
 ---
 
@@ -58,11 +106,11 @@ graph TD
 
 ### 2. Sim2Real Safety Shield
 - **Adaptive Force Budget:** Dynamic computation of $F_{\text{max}}$, $F_{\text{recommended}}$, and $F_{\text{slip\_min}}$.
-- **Uncertainty Gating ($U_{\text{th}}$):** Automatic safe grasp authorization (`AUTHORIZED_SAFE_GRASP`) when visual/tactile uncertainty stays below the configured margin (e.g., 7.0% vs 25% threshold).
+- **Uncertainty Gating ($U_{\text{th}}$):** Automatic safe grasp authorization (`AUTHORIZED_SAFE_GRASP`) when visual/tactile uncertainty stays below the configured margin.
 
 ### 3. Neuromorphic Reflex HUD (Edge Computing)
 - Neuromorphic reflex arc processed directly at the edge with ultra-low latency (8.8 ms).
-- Preventive detection and interception of micro-slips (Slip Intercept: SAFE) before relying on the central vision loop.
+- Preventive detection and interception of micro-slips before relying on the central vision loop.
 
 ### 4. Multi-Digit Selector & Manipulator (NASA/JPL Style)
 - Topological grasp telemetry and control for multi-digit contact (thumb, index, middle, full hand).
@@ -78,72 +126,138 @@ graph TD
 
 ### 7. Afferent-Omni Chat AI Copilot
 - Fully integrated somatosensorial conversational assistant connected to live telemetry endpoints and state.
-- Real-time technical English-language responses on material physics, safety margins, and TactoEval metrics.
+- **Powered by NVIDIA Nemotron 3 Super 120B** via Nebius Token Factory for real-time reasoning over tactile telemetry.
+- Natural language responses in English with technical precision.
+
+### 8. Material Calibration (Bayesian)
+- Micro-probe calibration (0.2 N) with Bayesian-inspired heuristics.
+- Refines Young's Modulus, friction coefficient, and shear limit for unknown materials.
+
+### 9. Compliance & Safety Certification
+- ISO 10218-1, ISO/TS 15066, IEC 61508, Sim2Real, TactoEval conformity validation.
+- Automated pass/fail report with score percentage.
+
+### 10. Anomaly Detection & Predictive Maintenance
+- Statistical anomaly detection (force spikes, uncertainty drift, latency degradation, stick-slip energy, actuator drift).
+- Risk level classification (low, medium, high).
+
+### 11. Zero-Shot Grasp Planning
+- Vision-prior-based grasp strategy selection (precision pinch, power grasp, gentle cradle, soft pinch, adaptive).
+- Predicted force, contact points, and confidence without prior training data.
+
+### 12. Session Replay & Data Logging
+- Frame-by-frame playback of recorded telemetry at 50 Hz.
+- Export full session data as JSON/CSV for post-mortem analysis and model training.
 
 ---
 
-## 🌍 High-Impact Industrial Use Cases
+## 🌍 Casos de Uso Industriales de Alto Impacto
 
-- 🛸 **Orbital & Aerospace Maintenance (NASA / ESA):** Dexterous manipulation of unconsolidated regolith, fragile geological samples, and space components in microgravity, overcoming teleoperation latency limitations.
-- 🩺 **Medical Robotics & Precision Surgery:** Protection of sensitive organic tissues in minimally invasive procedures. The sub-millisecond reflex arc prevents tearing by adapting pressure instantly.
+- 🛸 **Orbital & Aerospace Maintenance (NASA / ESA):** Dexterous manipulation of unconsolidated regolith, fragile geological samples, and space components in microgravity, superando las limitaciones de latencia de teleoperación.
+- 🩺 **Medical Robotics & Precision Surgery:** Protection of sensitive organic tissues in minimally invasive procedures. El arco reflejo sub-milisegundo previene rasgaduras adaptando la presión al instante.
 - 🤖 **High-Precision Industrial Assembly (Tesla / EV Manufacturing):** Zero-Shot automation for handling lithium-ion battery cells, optical lenses, and tempered glass without manual recalibration.
 - 🦿 **Bionic Prosthetics & E-Skin Research:** Translation engine between physical friction stimuli and high-frequency neural feedback signals.
 
 ---
 
-## 💻 Installation & Quick Deployment
+## 💻 Instalación y Despliegue Rápido
 
-### Prerequisites
+### Prerrequisitos
 - Node.js v18+
 - Python 3.10+
 - Git
+- Docker (opcional, para despliegue en Nebius)
 
-### 1. Clone the Repository
+### 1. Clonar el Repositorio
 ```bash
 git clone https://github.com/raulrodriguezmesia-blip/afferent-omni.git
 cd afferent-omni
 ```
 
-### 2. Configure & Start the Backend (FastAPI)
+### 2. Configurar y Levantar el Backend (FastAPI)
 ```bash
-# Navigate to backend
+# Entrar a la carpeta backend
 cd apps/api
 
-# Create and activate virtual environment
+# Crear y activar entorno virtual
 python -m venv venv
-# On Windows:
+# En Windows:
 .\venv\Scripts\activate
-# On Linux/macOS:
+# En Linux/macOS:
 source venv/bin/activate
 
-# Install dependencies
+# Instalar dependencias
 pip install -r requirements.txt
 
-# Start FastAPI server (Port 8002)
+# Configurar variables de entorno (opcional, para NVIDIA Nemotron)
+export NEBIUS_API_KEY=your-nebius-api-key
+export NEBIUS_BASE_URL=https://api.tokenfactory.nebius.ai/v1/
+export NEBIUS_MODEL=nvidia/nemotron-3-super-120b-a12b
+
+# Iniciar servidor FastAPI (Puerto 8002)
 uvicorn app.main:app --reload --port 8002
 ```
 
-### 3. Configure & Start the Frontend (React + Vite)
+### 3. Configurar y Levantar el Frontend (React + Vite)
 ```bash
-# In a new terminal, navigate to frontend
+# En una nueva terminal, ir a la raíz del proyecto / frontend
 cd apps/web
 
-# Install dependencies
+# Instalar dependencias
 npm install
 
-# Start Vite dev server (Port 5173)
+# Iniciar servidor de desarrollo Vite (Puerto 5173)
 npm run dev
 ```
 
-Access the dashboard from your browser at: **http://localhost:5173**
+Accede al dashboard desde tu navegador en: **http://localhost:5173**
 
-Standalone showcase (no backend required): **http://localhost:5173/showcase.html**
+Standalone showcase (sin backend): **http://localhost:5173/showcase.html**
+
+### 4. Despliegue con Docker (Nebius AI Cloud)
+```bash
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tu NEBIUS_API_KEY
+
+# Levantar toda la stack
+docker-compose up -d
+
+# Verificar
+curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/model-status
+```
 
 ---
 
-## 📄 License
+## 📄 Licencia
 
-This project is distributed under the MIT License. See the `LICENSE` file for more information.
+Este proyecto se distribuye bajo la Licencia MIT. Consulta el archivo LICENSE para obtener más información.
 
-Developed with passion for next-generation dexterous robotics. 🚀
-PYEOF
+Desarrollado con pasión para la robótica diestra de próxima generación. 🚀
+
+---
+
+### Physical AI Track — Nebius x NVIDIA Global AI Hackathon
+
+**Afferent-Omni** compite en el **Physical AI Track** del Nebius x NVIDIA Global AI Hackathon porque:
+
+1. **Embodied Intelligence:** Sistema de manipulación robótica que sense y actúa en el mundo real a través de telemetría táctil en tiempo real.
+2. **NVIDIA Models:** Integra **NVIDIA Nemotron 3 Super 120B** via Nebius Token Factory como motor de razonamiento para el AI copilot.
+3. **Nebius Infrastructure:** Desplegable en Nebius AI Cloud con Docker Compose. Usa Nebius Token Factory para inferencia de Nemotron.
+4. **Real-World Application:** Manipulación de componentes frágiles (vidrio, tejidos, muestras geológicas) con seguridad Sim2Real.
+5. **Open Source:** Licencia MIT, repositorio público, documentación completa.
+
+**Demo Video:** [Link to 3-minute demo video]
+
+**Key Application Modules (Physical AI):**
+- 3D Gel Deformation Viewer (Three.js) — visualización de contacto en tiempo real
+- Sim2Real Safety Shield — gating dinámico de fuerza con incertidumbre
+- Neuromorphic Reflex HUD — arco reflejo en el borde (<10ms)
+- Multi-Digit Topology — control de agarre multi-dígito estilo NASA JPL
+- Acoustic-Slip Spectrogram — análisis de micro-vibraciones stick-slip
+- Material Calibration — calibración bayesiana de materiales desconocidos
+- Compliance Report — validación ISO 10218-1, ISO/TS 15066, IEC 61508
+- Anomaly Detection — mantenimiento predictivo con detección estadística
+- Zero-Shot Grasp Planning — planificación de agarre sin datos de entrenamiento previos
+- Session Replay — reproducción frame-by-frame de telemetría a 50 Hz

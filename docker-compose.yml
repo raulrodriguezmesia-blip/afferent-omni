@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./apps/api
+    ports:
+      - "8000:8000"
+    environment:
+      - NEBIUS_API_KEY=${NEBIUS_API_KEY:-}
+      - NEBIUS_BASE_URL=${NEBIUS_BASE_URL:-https://api.tokenfactory.nebius.ai/v1/}
+      - NEBIUS_MODEL=${NEBIUS_MODEL:-nvidia/nemotron-3-super-120b-a12b}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./apps/api/data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./apps/web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: afferent-omni-network

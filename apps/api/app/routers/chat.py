@@ -64,6 +64,84 @@ class ChatResponse(BaseModel):
     category: str
     suggested_followups: List[str]
 
+NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.ai/v1/")
+NEBIUS_MODEL = os.getenv("NEBIUS_MODEL", "nvidia/nemotron-3-super-120b-a12b")
+
+
+async def _try_nemotron(query: str, context: dict) -> Optional[str]:
+    """Try to get a response from NVIDIA Nemotron via Nebius Token Factory."""
+    api_key = os.getenv("NEBIUS_API_KEY")
+    if not api_key:
+        return None
+    try:
+        import httpx
+        system_prompt = (
+            "You are Afferent-Omni, a somatosensorial AI copilot for robotic manipulation. "
+            "You analyze real-time tactile telemetry and provide safety assessments in English. "
+            "Be technical, natural, and connect your response to live telemetry values.\n\n"
+            "Current telemetry context (JSON):\n" + json.dumps(context, indent=2)[:4000]
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                f"{NEBIUS_BASE_URL}chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": NEBIUS_MODEL,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": query},
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.7,
+                },
+            )
+            if resp.status_code == 200:
+                return resp.json()["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+    return None
+
+
+@router.get("/model-status")
+async def model_status():
+    """Check NVIDIA model status via Nebius Token Factory."""
+    api_key = os.getenv("NEBIUS_API_KEY")
+    if not api_key:
+        return {
+            "connected": False,
+            "model": os.getenv("NEBIUS_MODEL", "nvidia/nemotron-3-super-120b-a12b"),
+            "latency_ms": 0,
+            "tokens_processed": 0,
+            "provider": "Nebius Token Factory",
+        }
+    try:
+        import httpx, time
+        start = time.time()
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(
+                f"{os.getenv('NEBIUS_BASE_URL', 'https://api.tokenfactory.nebius.ai/v1/')}models",
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            latency = round((time.time() - start) * 1000, 1)
+            if resp.status_code == 200:
+                return {
+                    "connected": True,
+                    "model": os.getenv("NEBIUS_MODEL", "nvidia/nemotron-3-super-120b-a12b"),
+                    "latency_ms": latency,
+                    "tokens_processed": 0,
+                    "provider": "Nebius Token Factory",
+                }
+    except Exception:
+        pass
+    return {
+        "connected": False,
+        "model": os.getenv("NEBIUS_MODEL", "nvidia/nemotron-3-super-120b-a12b"),
+        "latency_ms": 0,
+        "tokens_processed": 0,
+        "provider": "Nebius Token Factory",
+    }
+
+
 @router.post("/chat-assistant", response_model=ChatResponse)
 async def chat_assistant(payload: ChatRequest):
     query = (payload.query or "").strip()
@@ -72,7 +150,16 @@ async def chat_assistant(payload: ChatRequest):
     if not isinstance(context, dict):
         context = {}
 
-    # Try LLM first if API key is configured
+    # Try NVIDIA Nemotron via Nebius Token Factory first
+    nemotron_resp = await _try_nemotron(query, context)
+    if nemotron_resp:
+        return ChatResponse(
+            response=nemotron_resp,
+            category="nemotron",
+            suggested_followups=["What is Young's Modulus?", "Explain the Neuromorphic Reflex Arc", "Show TactoEval metrics"],
+        )
+
+    # Fallback to OpenAI/Anthropic
     llm_resp = await _try_llm(query, context)
     if llm_resp:
         return ChatResponse(

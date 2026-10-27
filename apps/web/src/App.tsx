@@ -32,6 +32,7 @@ const ShortcutHelp = lazy(() => import('./components/KeyboardShortcuts').then(m 
 const PerformanceMonitor = lazy(() => import('./components/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
 const SpaceMode = lazy(() => import('./components/SpaceMode').then(m => ({ default: m.SpaceMode })));
 const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(m => ({ default: m.SettingsPanel })));
+const NvidiaModelStatus = lazy(() => import('./components/NvidiaModelStatus').then(m => ({ default: m.NvidiaModelStatus })));
 
 function stressToCells(frame: TactileStreamFrame): TactileCell[] {
   const stress = frame.stress_distribution_kpa;
@@ -68,6 +69,7 @@ function AppContent() {
   const [presentationMode, setPresentationMode] = useState(false);
   const [shortcutHelp, setShortcutHelp] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
+  const [autoDemo, setAutoDemo] = useState(false);
 
   const { frame, connected, sendControls } = useTactileStream('ws://localhost:8002/ws/v1/tactile-stream');
 
@@ -142,6 +144,24 @@ function AppContent() {
   }, [activeFrame]);
 
   const activeDigits = DIGIT_MAP[selectedDigit] || ['thumb', 'index', 'middle'];
+
+  // Auto-Demo sequence
+  useEffect(() => {
+    if (!autoDemo) return;
+    const sequence = async () => {
+      setViewMode('3d');
+      await new Promise((r) => setTimeout(r, 1000));
+      runInference();
+      await new Promise((r) => setTimeout(r, 3000));
+      setStreaming(true);
+      await new Promise((r) => setTimeout(r, 5000));
+      setSelectedDigit('full');
+      await new Promise((r) => setTimeout(r, 2000));
+      setStreaming(false);
+      setAutoDemo(false);
+    };
+    sequence();
+  }, [autoDemo]);
 
   const shortcuts = [
     { key: ' ', action: () => setStreaming((p) => !p), description: 'Toggle live stream' },
@@ -229,6 +249,7 @@ function AppContent() {
             onParamsChange={(u, f) => sendControls({ u_threshold: u, f_max: f })}
           />
           <NeuromorphicReflexHUD reflex={neuromorphic} />
+          <NvidiaModelStatus apiBase={apiBase} />
           <LiveCharts streamFrames={streamFrames} />
           <PerformanceMonitor streamFrames={streamFrames} />
           <SpaceMode active={spaceMode} onToggle={() => setSpaceMode(!spaceMode)} objectLabel={objectLabel} />
@@ -238,6 +259,13 @@ function AppContent() {
             style={{ background: 'linear-gradient(90deg,#8b5cf6,#a855f7)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', cursor: 'pointer', fontSize: 11, width: '100%' }}
           >
             🎬 Presentation Mode
+          </button>
+          <button
+            onClick={() => setAutoDemo(true)}
+            disabled={autoDemo}
+            style={{ background: autoDemo ? 'rgba(139,92,246,0.3)' : 'linear-gradient(90deg,#10b981,#059669)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', cursor: autoDemo ? 'not-allowed' : 'pointer', fontSize: 11, width: '100%' }}
+          >
+            {autoDemo ? '🎬 Running Auto-Demo...' : '🎬 Auto-Demo (for recording)'}
           </button>
           <button
             onClick={() => setShortcutHelp(true)}
