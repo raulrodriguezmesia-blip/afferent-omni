@@ -208,8 +208,7 @@ function AppContent() {
   const physical = data?.physical_matrix;
 
   return (
-    <ToastProvider>
-      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#9ca3af', fontSize: 14 }}>Loading Afferent-Omni...</div>}>
+    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#9ca3af', fontSize: 14 }}>Loading Afferent-Omni...</div>}>
       <div className="app">
         <KeyboardShortcuts shortcuts={shortcuts} />
         <ShortcutHelp shortcuts={shortcuts} visible={shortcutHelp} onClose={() => setShortcutHelp(false)} />
@@ -326,10 +325,13 @@ function AppContent() {
       />
       </div>
       </Suspense>
-    </ToastProvider>
   );
 }
 
 export default function App() {
-  return <AppContent />;
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
+  );
 }
