@@ -19,11 +19,11 @@ Unlike purely speculative or high-latency LLM robotics controllers, **Afferent-O
 
 ```mermaid
 graph TD
-    subgraph Edge & Tactile Ingestion
+    subgraph "Edge & Tactile Ingestion"
         Sensors[Meta SAM 3.1 & GelSight Acoustic Sensors]
     end
 
-    subgraph Deterministic Control Loop (50 Hz Native Python / Edge <10ms)
+    subgraph "Deterministic Control Loop (50 Hz Native Python / Edge < 10ms)"
         API[FastAPI WebSocket Engine]
         Safety[Sim2Real Safety Shield - Dynamic Force Gating]
         Physics[Tribological Physics & Gel Deformation Engine]
@@ -35,13 +35,13 @@ graph TD
         API --> Reflex
     end
 
-    subgraph Asynchronous Reasoning Layer (Nebius AI Cloud)
+    subgraph "Asynchronous Reasoning Layer (Nebius AI Cloud)"
         Nemotron[NVIDIA Nemotron 3 Super 120B via Nebius Token Factory]
         API -->|JSON Telemetry Context| Nemotron
         Nemotron -->|High-Level Insights & Safety Policy| Dashboard
     end
 
-    subgraph C2 Dashboard (60 FPS Render)
+    subgraph "C2 Dashboard (60 FPS Render)"
         Dashboard[React 18 + Three.js Glassmorphism UI]
         API -->|50 Hz Stream| Dashboard
     end
