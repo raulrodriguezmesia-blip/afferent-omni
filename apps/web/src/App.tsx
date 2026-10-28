@@ -217,8 +217,8 @@ function AppContent() {
         <div className="logo">
           <div className="logo-dot" />
           <div>
-            <h1>Afferent</h1>
-            <p className="tagline">A Causal Vision-to-Touch Prior • Robots see, but do not feel. Afferent gives them the intuition of touch.</p>
+            <h1>Afferent-Omni</h1>
+            <p className="tagline">A Causal Vision-to-Touch Prior • Robots see, but do not feel. Afferent-Omni gives them the intuition of touch.</p>
           </div>
         </div>
         <div className="controls">
