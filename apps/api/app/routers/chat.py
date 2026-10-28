@@ -64,7 +64,7 @@ class ChatResponse(BaseModel):
     category: str
     suggested_followups: List[str]
 
-NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.ai/v1/")
+NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
 NEBIUS_MODEL = os.getenv("NEBIUS_MODEL", "nvidia/nemotron-3-super-120b-a12b")
 
 
@@ -119,7 +119,7 @@ async def model_status():
         start = time.time()
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(
-                f"{os.getenv('NEBIUS_BASE_URL', 'https://api.tokenfactory.nebius.ai/v1/')}models",
+                f"{os.getenv('NEBIUS_BASE_URL', 'https://api.tokenfactory.nebius.com/v1/')}models",
                 headers={"Authorization": f"Bearer {api_key}"},
             )
             latency = round((time.time() - start) * 1000, 1)

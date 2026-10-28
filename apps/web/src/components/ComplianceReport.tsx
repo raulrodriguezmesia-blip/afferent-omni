@@ -75,6 +75,18 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({ apiBase, con
           <div style={{ marginTop: 8, fontSize: 10, color: '#9ca3af' }}>
             Standards: {report.standards_evaluated.join(', ')}
           </div>
+          <a
+            href={`${apiBase}/api/v1/compliance/export-pdf?session_id=SESS-2026-NVIDIA-001&object_type=${encodeURIComponent(context?.objectLabel || 'Unknown')}&f_max=${context?.force_budget?.max_allowed_normal_force_N || 1.8}&u_th=${context?.tactile_reasoning_cot?.uncertainty_score || 0.09}&pass_status=${report.conformity_status === 'CONFORMANT'}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block', marginTop: 12, background: 'rgba(16,185,129,0.2)',
+              border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, padding: '6px 14px',
+              color: '#6ee7b7', cursor: 'pointer', fontSize: 11, textDecoration: 'none',
+            }}
+          >
+            📄 Export Official ISO PDF Report
+          </a>
         </div>
       )}
     </div>
