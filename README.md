@@ -227,6 +227,11 @@ graph TD
 - Frame-by-frame playback of recorded telemetry at 50 Hz.
 - Export full session data as JSON/CSV for post-mortem analysis and model training.
 
+### 13. ISO Compliance PDF Export (Enterprise)
+- Official ISO/TS 15066 & IEC 61508 Safety Compliance Audit Report generation.
+- Institutional PDF with conformity badge, compliance table, material profile, force budget, neuromorphic reflex, acoustic spectrogram, multi-digit topology, and Nemotron AI diagnosis.
+- One-click download from the Compliance Report panel.
+
 ---
 
 ## 🌍 Casos de Uso Industriales de Alto Impacto
@@ -367,4 +372,5 @@ Desarrollado con pasión para la robótica diestra de próxima generación. 🚀
 - Anomaly Detection — mantenimiento predictivo con detección estadística
 - Zero-Shot Grasp Planning — planificación de agarre sin datos de entrenamiento previos
 - Session Replay — reproducción frame-by-frame de telemetría a 50 Hz
+- ISO Compliance PDF Export — reporte oficial de conformidad ISO/TS 15066 & IEC 61508
 PYEOF
