@@ -1,5 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Load environment variables from .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from app.routers import health, infer, stream, chat, replay, anomaly, calibration, grasp, compliance, compliance_pdf
 
 app = FastAPI(
