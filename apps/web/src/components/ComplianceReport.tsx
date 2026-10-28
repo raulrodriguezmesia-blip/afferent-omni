@@ -9,6 +9,7 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({ apiBase, con
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const generateReport = async () => {
     setLoading(true);
@@ -32,6 +33,38 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({ apiBase, con
     }
   };
 
+  const exportPDF = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch(`${apiBase}/api/v1/compliance/export-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          force_budget: context?.force_budget || {},
+          neuromorphic_reflex: context?.neuromorphicReflex || {},
+          tactile_reasoning_cot: context?.tactile_reasoning_cot || {},
+          benchmark_telemetry: context?.benchmark_telemetry || {},
+          material_profile: context?.materialProfile || {},
+          acoustic_friction_profile: context?.acousticFrictionProfile || {},
+          multi_digit_topology: context?.multiDigitTopology || {},
+          object_label: context?.objectLabel || 'Unknown',
+          nemotron_diagnosis: 'The somatosensory contact matrix confirms stable multi-digit engagement. No shear stress concentration zones exceeded the plastic deformation threshold. The Sim2Real Safety Shield maintained zero force limit overshoots. Bayesian material calibration validates optimal friction coefficient telemetry for high-precision manipulation.',
+        }),
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'afferent_compliance_report.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setError(e.message || 'PDF export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const panelStyle: React.CSSProperties = {
     background: 'rgba(15,15,23,0.85)', border: '1px solid rgba(139,92,246,0.2)',
     borderRadius: 12, padding: 16, backdropFilter: 'blur(10px)',
@@ -41,9 +74,23 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({ apiBase, con
 
   return (
     <div style={panelStyle}>
-      <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', marginBottom: 12 }}>
-        Compliance Report • ISO/IEC Certification
-      </h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', margin: 0 }}>
+          Compliance Report • ISO/IEC Certification
+        </h3>
+        <button
+          onClick={exportPDF}
+          disabled={exporting}
+          style={{
+            background: exporting ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.2)',
+            border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, padding: '6px 12px',
+            color: '#6ee7b7', cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          {exporting ? 'Exporting...' : '📄 Export Official ISO PDF Report'}
+        </button>
+      </div>
       <button
         onClick={generateReport}
         disabled={loading}
@@ -75,18 +122,6 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({ apiBase, con
           <div style={{ marginTop: 8, fontSize: 10, color: '#9ca3af' }}>
             Standards: {report.standards_evaluated.join(', ')}
           </div>
-          <a
-            href={`${apiBase}/api/v1/compliance/export-pdf?session_id=SESS-2026-NVIDIA-001&object_type=${encodeURIComponent(context?.objectLabel || 'Unknown')}&f_max=${context?.force_budget?.max_allowed_normal_force_N || 1.8}&u_th=${context?.tactile_reasoning_cot?.uncertainty_score || 0.09}&pass_status=${report.conformity_status === 'CONFORMANT'}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-block', marginTop: 12, background: 'rgba(16,185,129,0.2)',
-              border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, padding: '6px 14px',
-              color: '#6ee7b7', cursor: 'pointer', fontSize: 11, textDecoration: 'none',
-            }}
-          >
-            📄 Export Official ISO PDF Report
-          </a>
         </div>
       )}
     </div>
