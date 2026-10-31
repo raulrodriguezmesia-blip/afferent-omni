@@ -1,4 +1,5 @@
 ﻿# 🤖 Afferent-Omni: High-Frequency Tactile Sensing & Vision-to-Touch Physical AI Architecture
+ [![M8ven Score](https://m8ven.ai/badge/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?v=b5711180077c435108c5b7363802bdbd)](https://m8ven.ai/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?s=readme)
 
 > **Nebius x NVIDIA Global AI Hackathon Submission** | *Physical AI Track*  
 > **Core Stack:** FastAPI, WebSockets (50Hz), React 18, Three.js (60 FPS), Meta SAM 3.1, NVIDIA Nemotron 3 Super 120B (via Nebius Token Factory).
