@@ -1,9 +1,20 @@
-﻿# 🤖 Afferent-Omni: High-Frequency Tactile Sensing & Vision-to-Touch Physical AI Architecture
- [![M8ven Score](https://m8ven.ai/badge/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?v=b5711180077c435108c5b7363802bdbd)](https://m8ven.ai/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?s=readme)
+﻿# > 🏆 **Official Submission:** Nebius x NVIDIA Global AI Hackathon — *Physical AI Track*
 
-> **Nebius x NVIDIA Global AI Hackathon Submission** | *Physical AI Track*  
-> **Core Stack:** FastAPI, WebSockets (50Hz), React 18, Three.js (60 FPS), Meta SAM 3.1, NVIDIA Nemotron 3 Super 120B (via Nebius Token Factory).
+[![Hackathon](https://img.shields.io/badge/Nebius_x_NVIDIA-Global_AI_Hackathon-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://devpost.com)
+[![Track](https://img.shields.io/badge/Track-Physical_AI-0052CC?style=for-the-badge)](https://devpost.com)
 
+---
+
+### ⚡ System Architecture & Core Stack
+
+| Component | Technology | Role & Metrics |
+| :--- | :--- | :--- |
+| **LLM Reasoning Engine** | **NVIDIA Nemotron 3 Super 120B** | High-level semantic planning & failure diagnosis (via **Nebius Token Factory API**) |
+| **Vision Segmenter** | **Meta SAM 3.1** | Real-time visual target segmentation & mask processing |
+| **Control Backend** | **FastAPI + WebSockets** | Deterministic telemetry streaming running at **50Hz** |
+| **3D Real-Time UI** | **React 18 + Three.js** | Interactive haptic & dynamic deformation visualizer at **60 FPS** |
+
+---
 ---
 
 ## 📌 Executive Summary (BLUF)
