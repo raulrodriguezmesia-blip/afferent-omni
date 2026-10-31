@@ -1,7 +1,10 @@
-﻿# > 🏆 **Official Submission:** Nebius x NVIDIA Global AI Hackathon — *Physical AI Track*
+﻿ # 🤖 Afferent-Omni: High-Frequency Tactile Sensing & Vision-to-Touch Physical AI Architecture
 
+[![M8ven Verified](https://m8ven.ai/badge/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?v=b5711180077c435108c5b7363802bdbd)](https://m8ven.ai/mcp/raulrodriguezmesia-blip-afferent-omni-cz86ak?s=readme)
 [![Hackathon](https://img.shields.io/badge/Nebius_x_NVIDIA-Global_AI_Hackathon-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://devpost.com)
 [![Track](https://img.shields.io/badge/Track-Physical_AI-0052CC?style=for-the-badge)](https://devpost.com)
+
+> 🏆 **Official Submission:** Nebius x NVIDIA Global AI Hackathon — *Physical AI Track*
 
 ---
 
